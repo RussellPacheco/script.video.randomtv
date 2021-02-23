@@ -7,11 +7,12 @@ import threading
 import sys
 import time
 import urllib
+import urllib.parse
 
 
 def log(msg):
 	xbmc.log("%s: %s" % (name,msg),level=xbmc.LOGDEBUG )
-	#xbmc.log("%s: %s" % (name,msg), xbmc.LOGNOTICE)
+	#xbmc.log("%s: %s" % (name,msg), xbmc.LOGINFO)
 
 
 def buildPlaylist(myEpisodes):
@@ -28,7 +29,7 @@ def ResetPlayCount(myEpisode):
 	xbmc.Monitor().waitForAbort(5)
 	log("--------- ResetPlayCount")
 	log("-- Episode Id: " + str(myEpisode['episodeId']))
-	log("-- Episode Name: " + str(myEpisode['episodeName']))
+	log("-- Episode Name: " + myEpisode['episodeName'])
 	log("-- Last Played: " + myEpisode['lastPlayed'])
 	log("-- Play Count: " + str(myEpisode['playCount']))
 	log("-- Resume Position: " + str(myEpisode['resume']['position']))
@@ -60,13 +61,22 @@ class MyPlayer(xbmc.Player):
 #
 
 
+class busyDiag():
+	def create():
+		xbmc.executebuiltin('ActivateWindow(BusyDialogNoCancel)')
+	
+	def close():
+		xbmc.executebuiltin('Dialog.Close(BusyDialogNoCancel)')
+#
+
+
 # Set some variables
 addon = xbmcaddon.Addon()
 addonid = addon.getAddonInfo("id")
 name = addon.getAddonInfo("name")
 icon = addon.getAddonInfo("icon")
 
-busyDiag = xbmcgui.DialogBusy()
+#busyDiag = xbmcgui.DialogBusy()
 myEpisodes = []
 
 includedShows = addon.getSetting("includedShows")
@@ -113,9 +123,9 @@ if len(sys.argv) > 1:
 if addon.getSetting("ShowNotifications") == "true": xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, addon.getLocalizedString(32007), 2000, icon))
 log("-------------------------------------------------------------------------")
 log("Starting")
-busyDiag.create()
 backWindow = xbmcgui.Window()
 backWindow.show()
+busyDiag.create()
 
 
 # Get TV Episodes
@@ -128,8 +138,8 @@ if hasattr(sys, 'listitem'):
 
 	if "favourites" in selectedPath:
 		log("-- Selected from Favourites")
-		log("---- Decoded Path: " + urllib.unquote(selectedPath))
-		embeddedPath = urllib.unquote(selectedPath).split('"')[1]
+		log("---- Decoded Path: " + urllib.parse.unquote(selectedPath))
+		embeddedPath = urllib.parse.unquote(selectedPath).split('"')[1]
 		log("---- Embeddedd Path: " + embeddedPath)
 		selectedShow = embeddedPath.split('/')[4]
 		selectedSeason = embeddedPath.split('/')[5]
@@ -158,8 +168,8 @@ if hasattr(sys, 'listitem'):
 	if returnedEpisodes['result']['limits']['total'] > 0:
 		for episode in returnedEpisodes['result']['episodes']:
 			if addon.getSetting("IncludeUnwatched") == "true" or episode['playcount'] > 0:
-				log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip() + " - " + episode['label'].encode('utf-8').strip())
-				myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip(), 'episodeName': episode['label'].encode('utf-8').strip(), 'episodeFile': episode['file'].encode('utf-8').strip(), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})	
+				log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip().decode('utf-8') + " - " + episode['label'].encode('utf-8').strip().decode('utf-8'))
+				myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip().decode('utf-8'), 'episodeName': episode['label'].encode('utf-8').strip().decode('utf-8'), 'episodeFile': episode['file'].encode('utf-8').strip().decode('utf-8'), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})	
 else:
 	log("--------- Started App from Addon Menu")
 	if addon.getSetting("IncludeAll") == "true":
@@ -174,9 +184,9 @@ else:
 				if allEpisodes['result']['limits']['total'] > 0:
 					for episode in allEpisodes['result']['episodes']:
 						if addon.getSetting("IncludeUnwatched") == "true" or episode['playcount'] > 0:
-							log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip() + " - " + episode['label'].encode('utf-8').strip())
+							log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip().decode('utf-8') + " - " + episode['label'].encode('utf-8').strip().decode('utf-8'))
 							#log("Added Episode: " + episode['label'].encode('utf-8').strip())
-							myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip(), 'episodeName': episode['label'].encode('utf-8').strip(), 'episodeFile': episode['file'].encode('utf-8').strip(), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
+							myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip().decode('utf-8'), 'episodeName': episode['label'].encode('utf-8').strip().decode('utf-8'), 'episodeFile': episode['file'].encode('utf-8').strip().decode('utf-8'), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
 	else:
 		for includedShow in map(int, includedShows.split(", ")):
 			command = '{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": { "tvshowid": %d, "properties": ["showtitle", "file", "playcount", "lastplayed", "resume"] }, "id": 1}' % includedShow
@@ -185,9 +195,9 @@ else:
 			if allEpisodes['result']['limits']['total'] > 0:
 				for episode in allEpisodes['result']['episodes']:
 					if addon.getSetting("IncludeUnwatched") == "true" or episode['playcount'] > 0:
-						log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip() + " - " + episode['label'].encode('utf-8').strip())
+						log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip().decode('utf-8') + " - " + episode['label'].encode('utf-8').strip().decode('utf-8'))
 						#log("Added Episode: " + episode['label'].encode('utf-8').strip())
-						myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip(), 'episodeName': episode['label'].encode('utf-8').strip(), 'episodeFile': episode['file'].encode('utf-8').strip(), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
+						myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip().decode('utf-8'), 'episodeName': episode['label'].encode('utf-8').strip().decode('utf-8'), 'episodeFile': episode['file'].encode('utf-8').strip().decode('utf-8'), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
 #		
 log("Total Episodes: " + str(len(myEpisodes)))
 
@@ -270,7 +280,7 @@ while (not xbmc.Monitor().waitForAbort(1)):
 			#
 		#
 
-		log("-- Started: " + myEpisodes[myPlaylist.getposition()]['episodeShow'] + " - " + myEpisodes[myPlaylist.getposition()]['episodeName'])
+		log("-- Started: " + str(myEpisodes[myPlaylist.getposition()]['episodeShow']) + " - " + str(myEpisodes[myPlaylist.getposition()]['episodeName']))
 		if addon.getSetting("ShowNotifications") == "true": xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, myEpisodes[myPlaylist.getposition()]['episodeShow'] + "\r\n" + myEpisodes[myPlaylist.getposition()]['episodeName'], 5000, icon))
 		
 		log("-- Playlist Position: " + str(myPlaylist.getposition()))
@@ -320,6 +330,7 @@ while (not xbmc.Monitor().waitForAbort(1)):
 
 # Display Stopping Notification
 if addon.getSetting("ShowNotifications") == "true": xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, addon.getLocalizedString(32011), 2000, icon))
+busyDiag.close()
 backWindow.close()
 log("Stopping")
 log("-------------------------------------------------------------------------")
