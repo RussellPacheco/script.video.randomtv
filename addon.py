@@ -26,7 +26,7 @@ def buildPlaylist(myEpisodes):
 
 
 def ResetPlayCount(myEpisode):
-	xbmc.Monitor().waitForAbort(5)
+	monitor.waitForAbort(5)
 	log("--------- ResetPlayCount")
 	log("-- Episode Id: " + str(myEpisode['episodeId']))
 	log("-- Episode Name: " + myEpisode['episodeName'])
@@ -75,8 +75,8 @@ addon = xbmcaddon.Addon()
 addonid = addon.getAddonInfo("id")
 name = addon.getAddonInfo("name")
 icon = addon.getAddonInfo("icon")
+monitor = xbmc.Monitor()
 
-#busyDiag = xbmcgui.DialogBusy()
 myEpisodes = []
 
 includedShows = addon.getSetting("includedShows")
@@ -168,8 +168,8 @@ if hasattr(sys, 'listitem'):
 	if returnedEpisodes['result']['limits']['total'] > 0:
 		for episode in returnedEpisodes['result']['episodes']:
 			if addon.getSetting("IncludeUnwatched") == "true" or episode['playcount'] > 0:
-				log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip().decode('utf-8') + " - " + episode['label'].encode('utf-8').strip().decode('utf-8'))
-				myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip().decode('utf-8'), 'episodeName': episode['label'].encode('utf-8').strip().decode('utf-8'), 'episodeFile': episode['file'].encode('utf-8').strip().decode('utf-8'), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})	
+				log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'] + " - " + episode['label'])
+				myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'], 'episodeName': episode['label'], 'episodeFile': episode['file'], 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})	
 else:
 	log("--------- Started App from Addon Menu")
 	if addon.getSetting("IncludeAll") == "true":
@@ -184,9 +184,9 @@ else:
 				if allEpisodes['result']['limits']['total'] > 0:
 					for episode in allEpisodes['result']['episodes']:
 						if addon.getSetting("IncludeUnwatched") == "true" or episode['playcount'] > 0:
-							log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip().decode('utf-8') + " - " + episode['label'].encode('utf-8').strip().decode('utf-8'))
-							#log("Added Episode: " + episode['label'].encode('utf-8').strip())
-							myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip().decode('utf-8'), 'episodeName': episode['label'].encode('utf-8').strip().decode('utf-8'), 'episodeFile': episode['file'].encode('utf-8').strip().decode('utf-8'), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
+							log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'] + " - " + episode['label'])
+							myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'], 'episodeName': episode['label'], 'episodeFile': episode['file'], 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
+
 	else:
 		for includedShow in map(int, includedShows.split(", ")):
 			command = '{"jsonrpc": "2.0", "method": "VideoLibrary.GetEpisodes", "params": { "tvshowid": %d, "properties": ["showtitle", "file", "playcount", "lastplayed", "resume"] }, "id": 1}' % includedShow
@@ -195,9 +195,8 @@ else:
 			if allEpisodes['result']['limits']['total'] > 0:
 				for episode in allEpisodes['result']['episodes']:
 					if addon.getSetting("IncludeUnwatched") == "true" or episode['playcount'] > 0:
-						log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'].encode('utf-8').strip().decode('utf-8') + " - " + episode['label'].encode('utf-8').strip().decode('utf-8'))
-						#log("Added Episode: " + episode['label'].encode('utf-8').strip())
-						myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'].encode('utf-8').strip().decode('utf-8'), 'episodeName': episode['label'].encode('utf-8').strip().decode('utf-8'), 'episodeFile': episode['file'].encode('utf-8').strip().decode('utf-8'), 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
+						log("Added Episode: " + str(episode['episodeid']) + " -- " + episode['showtitle'] + " - " + episode['label'])
+						myEpisodes.append({'episodeId': episode['episodeid'], 'episodeShow': episode['showtitle'], 'episodeName': episode['label'], 'episodeFile': episode['file'], 'playCount': episode['playcount'], 'lastPlayed': episode['lastplayed'], 'resume': episode['resume']})
 #		
 log("Total Episodes: " + str(len(myEpisodes)))
 
@@ -216,11 +215,11 @@ else:
 	# Get Auto Stop Check Time - Current Time + Auto Stop Check Timer
 	if addon.getSetting("AutoStop") == "true":
 		log("-- Auto Stop Enabled")
-		log("-- Auto Stop Timer: " + addon.getSetting("AutoStopTimer"))
-		log("-- Auto Stop Wait: " + addon.getSetting("AutoStopWait"))
 		AutoStopCheckTime = int(time.time()) + (int(addon.getSetting("AutoStopTimer")) * 60)
 		AutoStopWait = (int(addon.getSetting("AutoStopWait")) * 60)
 		AutoStopDialog = xbmcgui.DialogProgress()
+		log("-- Auto Stop Timer: " + str(AutoStopCheckTime))
+		log("-- Auto Stop Wait: " + str(AutoStopWait))
 	#
 
 	# Initialize our Player
@@ -240,29 +239,31 @@ else:
 #
 
 
-while (not xbmc.Monitor().waitForAbort(1)):
+while (not monitor.abortRequested()):
 	if addon.getSetting("AutoStop") == "true":
 		if int(time.time()) >= AutoStopCheckTime:
 			log("-- Auto Stop Timer Reached")
+			log("-- AutoStopAt: " + str(AutoStopCheckTime + AutoStopWait))
 			AutoStopDialog.create(name, addon.getLocalizedString(32015))
 			while int(time.time()) < AutoStopCheckTime + AutoStopWait:
-				AutoStopDialog.update(int(int(time.time() - AutoStopCheckTime) * 100 / AutoStopWait), addon.getLocalizedString(32015), str(AutoStopWait - int(time.time() - AutoStopCheckTime)) + " " + addon.getLocalizedString(32016))
+				AutoStopDialog.update(int((time.time() - AutoStopCheckTime) * 100 / AutoStopWait), addon.getLocalizedString(32015) + "\n" + str(AutoStopWait - int(time.time() - AutoStopCheckTime)) + " " + addon.getLocalizedString(32016))
 				if AutoStopDialog.iscanceled():
 					log("-- Dialog Cancelled - Breaking")
 					break
 				#
-				xbmc.Monitor().waitForAbort(0.1)
+				monitor.waitForAbort(0.1)
 			#
 			if AutoStopDialog.iscanceled():
 				log("-- Dialog Cancelled")
 				AutoStopCheckTime = int(time.time()) + (int(addon.getSetting("AutoStopTimer")) * 60)
+				log("-- NewAutoStopAt: " + str(AutoStopCheckTime + AutoStopWait))
 			#
 			else:
 				log("-- Dialog Not Cancelled")
-				xbmc.executebuiltin('PlayerControl(Stop)')
+				player.stop()
 			#
 			AutoStopDialog.close()
-			xbmc.Monitor().waitForAbort(0.2)
+			monitor.waitForAbort(0.2)
 		#
 	#
 
@@ -323,6 +324,10 @@ while (not xbmc.Monitor().waitForAbort(1)):
 			log("-- Start ResetPlayCount Thread")
 			thread = threading.Thread(target=ResetPlayCount, args=(myEpisodes[lastEpisode],))
 			thread.start()
+		break
+	#
+	
+	if monitor.waitForAbort(1):
 		break
 	#
 #
