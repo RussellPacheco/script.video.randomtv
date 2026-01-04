@@ -120,11 +120,14 @@ if len(sys.argv) > 1:
 
 
 # Display Starting Notification
-if addon.getSetting("ShowNotifications") == "true": xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, addon.getLocalizedString(32007), 2000, icon))
+if addon.getSetting("ShowNotifications") == "true": 
+	xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, addon.getLocalizedString(32007), 2000, icon))
 log("-------------------------------------------------------------------------")
 log("Starting")
-backWindow = xbmcgui.Window()
-backWindow.show()
+
+# Navigate to home screen first - this will be the window we return to when playback stops
+xbmc.executebuiltin('ActivateWindow(home)')
+monitor.waitForAbort(0.2)
 busyDiag.create()
 
 
@@ -206,7 +209,6 @@ if len(myEpisodes) == 0:
 	log("--------- No episodes")
 	xbmcgui.Dialog().ok(name, addon.getLocalizedString(32008), addon.getLocalizedString(32009))
 	xbmc.executebuiltin('Addon.OpenSettings(%s)' % addonid)
-	backWindow.close()
 	log("Stopping")
 	log("-------------------------------------------------------------------------")
 	quit()
@@ -334,8 +336,21 @@ while (not monitor.abortRequested()):
 
 
 # Display Stopping Notification
-if addon.getSetting("ShowNotifications") == "true": xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, addon.getLocalizedString(32011), 2000, icon))
+if addon.getSetting("ShowNotifications") == "true": 
+	xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(name, addon.getLocalizedString(32011), 2000, icon))
+
 busyDiag.close()
-backWindow.close()
+
+# Explicitly stop the player to avoid orphaned player instance
+if player.isPlaying():
+	log("Stopping player explicitly")
+	player.stop()
+	# Wait for player to fully stop
+	monitor.waitForAbort(0.5)
+
+# Ensure we're back on home screen
+xbmc.executebuiltin('ActivateWindow(home)')
+monitor.waitForAbort(0.2)
+
 log("Stopping")
 log("-------------------------------------------------------------------------")

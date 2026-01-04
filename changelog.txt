@@ -1,3 +1,8 @@
+v1.3.1 (5 January 2026)
+  - Fixed black screen issue when pressing Back during playback on LibreELEC
+  - Removed empty backWindow that was causing window manager errors
+  - Added explicit player stop to prevent buffer timeout loops
+  - Improved window navigation to Home screen before playback and on exit
 v1.3.0 (23 February 2021)
   - Added support for Matrix / python 3
 v1.2.2 (11 June 2019)

@@ -1,6 +1,14 @@
 # script.video.randomtv
 Kodi Addon: RandomTV
 
+## Fork Notice
+This is a fork of the original [script.video.randomtv](https://github.com/gmccauley/script.video.randomtv) by gmccauley.
+
+### Changes in this fork:
+- **v1.3.1 (Jan 2026)**: Fixed black screen/buffer timeout issue on LibreELEC when pressing Back during playback. The original addon created an empty window that caused Kodi's window manager to initialize an empty window ID, resulting in black screens and orphaned player instances with continuous buffer timeout errors.
+
+---
+
 I searched for an addon to play Random TV Episodes from my library and while I found a few, none were really what I wanted. So what's a guy to do? Write his own addon of course. :D
 
 I'm a little anal when it comes to watched status and stuff in my library with the "in progress" icon, so one of my biggest requirements was to be able to not update the Play Count or resume info. So basically, I wanted an addon that would set the playcount and resume info back to what it was before playing.

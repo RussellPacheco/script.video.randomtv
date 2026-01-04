@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="script.video.randomtv" name="RandomTV" version="1.3.0" provider-name="gmccauley">
+<addon id="script.video.randomtv" name="RandomTV" version="1.3.1" provider-name="gmccauley, russ (fork)">
   <requires>
     <import addon="xbmc.python" version="3.0.0"/>
   </requires>
@@ -34,6 +34,9 @@ It will also add a context menu item so that you can play a specific show or sea
     <forum>https://forum.kodi.tv/showthread.php?tid=310494</forum>
     <source>https://github.com/gmccauley/script.video.randomtv</source>
     <news>
+v1.3.1 (5 January 2026)
+  - Fixed black screen issue when pressing Back during playback on LibreELEC
+  - Removed empty backWindow causing window manager errors
 v1.3.0 (23 February 2021)
   - Added support for Matrix / python 3
 	</news>
